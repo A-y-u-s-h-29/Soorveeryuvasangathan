@@ -145,10 +145,10 @@ const ImageSlider = () => {
       
       <button
         onClick={nextSlide}
-        className="absolute hidden lg:block right-2 md:right-3 top-1/2 transform -translate-y-1/2 z-30 p-2 md:p-3 rounded-full transition duration-300"
+        className="absolute hidden lg:block right-2 md:right-4 top-1/2 transform -translate-y-1/2 z-30p-2 md:p-3 rounded-full transition duration-300"
         aria-label="Next slide"
       >
-        <ChevronRight className="w-5 h-5 md:w-10 md:h-10 text-white" />
+        <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white" />
       </button>
 
       {/* Dots Indicator */}

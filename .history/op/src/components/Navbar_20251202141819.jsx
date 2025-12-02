@@ -47,12 +47,12 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-8 exo">
+          <div className="hidden lg:flex items-center space-x-8">
             {navItems.map((item) => (
               <a
                 key={item.name}
                 href={item.href}
-                className={`font-semibold exo text-md transition duration-300 relative group ${
+                className={`font-medium new text-lg transition duration-300 relative group ${
                   isScrolled ? 'text-gray-800' : 'text-white'
                 }`}
               >
@@ -62,7 +62,7 @@ const Navbar = () => {
                 } group-hover:w-full`}></span>
               </a>
             ))}
-            <button className="bg-[#50C779] hover:bg-[#3EAE66] text-white px-6 py-2 rounded-2xl font-semibold exo text-lg hover:scale-105 transition duration-300 shadow-lg">
+            <button className="bg-[#50C779] hover:bg-[#3EAE66] text-white px-6 py-2 rounded-2xl font-semibold new text-lg hover:scale-105 transition duration-300 shadow-lg">
               Donate Now
             </button>
           </div>

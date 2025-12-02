@@ -137,18 +137,18 @@ const ImageSlider = () => {
       {/* Navigation Buttons */}
       <button
         onClick={prevSlide}
-        className="absolute hidden lg:block left-2 md:left-3 top-1/2 transform -translate-y-1/2 z-30 p-2 md:p-3 rounded-full transition duration-300"
+        className="absolute hidden lg:block left-2 md:left-4 top-1/2 transform -translate-y-1/2 z-30p-2 md:p-3 rounded-full transition duration-300"
         aria-label="Previous slide"
       >
-        <ChevronLeft className="w-10 h-10 md:w-10 md:h-10 text-white" />
+        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-white" />
       </button>
       
       <button
         onClick={nextSlide}
-        className="absolute hidden lg:block right-2 md:right-3 top-1/2 transform -translate-y-1/2 z-30 p-2 md:p-3 rounded-full transition duration-300"
+        className="absolute hidden lg:block right-2 md:right-4 top-1/2 transform -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2 md:p-3 rounded-full transition duration-300"
         aria-label="Next slide"
       >
-        <ChevronRight className="w-5 h-5 md:w-10 md:h-10 text-white" />
+        <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-white" />
       </button>
 
       {/* Dots Indicator */}
