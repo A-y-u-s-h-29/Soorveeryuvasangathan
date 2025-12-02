@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+
+.new{
+  font-family: Fraunces, "Fraunces Placeholder", serif;
+
+
+color: rgb(255, 255, 255);
+}
+
+.hok{
+  font-family: "Hanken Grotesk", "Hanken Grotesk Placeholder", sans-serif;
+
+color: rgb(255, 255, 255);
+}
+.exo{
+  font-family: "Exo 2", sans-serif;
+ 
+  font-style: normal;
+}

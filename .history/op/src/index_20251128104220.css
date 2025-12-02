@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Homepage background */
+html, body, #root { height: 100%; }
+body { background-color: #15362D; color: #ffffff; }
+
+/* Add any global overrides here */

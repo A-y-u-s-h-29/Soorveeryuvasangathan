@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+
+.new{
+  font-family: Fraunces, "Fraunces Placeholder", serif;
+
+
+color: rgb(255, 255, 255);
+}
