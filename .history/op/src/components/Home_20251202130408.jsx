@@ -6,7 +6,7 @@ import { Book, Shirt, Home as HomeIcon, Utensils, Heart, Users } from "lucide-re
 
 const Home = () => {
   return (
-    <div className="bg-white text-gray-800 ">
+    <div className="bg-white text-gray-800">
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }
@@ -20,7 +20,7 @@ const Home = () => {
     
       
       {/* Slider Section */}
-      <section className="h-[100vh]">
+      <section className="h-[70vh]">
         <ImageSlider />
       </section>
 

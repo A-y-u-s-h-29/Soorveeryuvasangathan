@@ -20,7 +20,7 @@ const Home = () => {
     
       
       {/* Slider Section */}
-      <section className="h-[100vh]">
+      <section className="h-[70vh]">
         <ImageSlider />
       </section>
 
