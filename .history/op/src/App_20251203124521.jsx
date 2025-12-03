@@ -11,7 +11,6 @@ import VolunteerForm from './components/VolunteerForm';
 import VolunteerCard from './components/VolunteerCard'; // Make sure this is your MiniVolunteerCard
 import ModernFooter from './components/ModernFooter';
 import DonationPage from './components/DonationPage';
-import VolunteerGallery from './components/VolunteerGallery';
 
 function App() {
   const [latestVolunteer, setLatestVolunteer] = useState(null);

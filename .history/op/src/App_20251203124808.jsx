@@ -8,7 +8,7 @@ import AboutSection from './components/AboutSection';
 import InstagramVideoSimple from './components/VideoPage';
 import VolunteerPage from './components/VolunteerPage';
 import VolunteerForm from './components/VolunteerForm';
-import VolunteerCard from './components/VolunteerCard'; // Make sure this is your MiniVolunteerCard
+
 import ModernFooter from './components/ModernFooter';
 import DonationPage from './components/DonationPage';
 import VolunteerGallery from './components/VolunteerGallery';
@@ -101,7 +101,7 @@ function App() {
                   
                   {/* ID Card */}
                   <div className="max-w-4xl mx-auto">
-                    <VolunteerCard 
+                    <VolunteerCard
                       volunteer={latestVolunteer}
                       isPreview={false}
                       onDelete={handleDeleteVolunteer}
