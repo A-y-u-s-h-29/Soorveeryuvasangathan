@@ -245,7 +245,7 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
                                         name="aakNo"
                                         value={formData.aakNo}
                                         onChange={handleChange}
-                                        placeholder="Enter Adhar number"
+                                        placeholder="Enter AAK number"
                                         className={`w-full px-4 py-3 pl-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.aakNo ? 'border-red-500' : 'border-gray-300'}`}
                                         disabled={loading}
                                     />

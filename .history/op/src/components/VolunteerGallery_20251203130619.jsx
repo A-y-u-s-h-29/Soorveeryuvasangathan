@@ -181,6 +181,54 @@ const VolunteerGallery = () => {
         </div>
       </div>
 
+      {/* Search and Filter Bar */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="bg-white rounded-xl shadow-lg p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by name, AAK no, mobile, address..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Filter by AAK Number */}
+            <div className="relative">
+              <Filter className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+              <select
+                value={selectedAakNo}
+                onChange={(e) => setSelectedAakNo(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none"
+              >
+                <option value="">All AAK Numbers</option>
+                {aakNumbers.map(aakNo => (
+                  <option key={aakNo} value={aakNo}>{aakNo}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+             
+              <button
+                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition flex items-center justify-center"
+              >
+                {viewMode === 'grid' ? (
+                  <List className="w-5 h-5" />
+                ) : (
+                  <Grid className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Results Count */}
       <div className="max-w-7xl mx-auto mb-4">

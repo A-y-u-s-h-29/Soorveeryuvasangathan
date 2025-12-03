@@ -237,7 +237,7 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
                             <div>
                                 <label className="flex items-center text-gray-700 font-medium mb-2">
                                     <IdCard className="w-5 h-5 mr-2 text-green-600" />
-                                    Adhar Number *
+                                    A Number *
                                 </label>
                                 <div className="relative">
                                     <input
@@ -245,7 +245,7 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
                                         name="aakNo"
                                         value={formData.aakNo}
                                         onChange={handleChange}
-                                        placeholder="Enter Adhar number"
+                                        placeholder="Enter AAK number"
                                         className={`w-full px-4 py-3 pl-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.aakNo ? 'border-red-500' : 'border-gray-300'}`}
                                         disabled={loading}
                                     />
