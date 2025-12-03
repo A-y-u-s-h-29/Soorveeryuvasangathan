@@ -1,8 +1,8 @@
 // src/components/Navbar.jsx
 import React, { useState, useEffect } from "react";
 import { HashLink } from 'react-router-hash-link';
-import { Link, useNavigate } from 'react-router-dom'; // Link import करें
-import { Heart, Users } from "lucide-react"; // Users icon add करें
+import { useNavigate } from 'react-router-dom';
+import { Heart } from "lucide-react";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -13,8 +13,7 @@ const Navbar = () => {
     { name: "Home", href: "#home" },
     { name: "Programs", href: "#programs" },
     { name: "Our Work", href: "#work" },
-    // Gallery को nav items में add करें
-    { name: "Volunteer Gallery", href: "/gallery", type: "route" }
+    {name:""}
   ];
 
   // Scroll effect for navbar
@@ -40,23 +39,12 @@ const Navbar = () => {
 
   // Handle Donate Now button click
   const handleDonateClick = () => {
+    // Close mobile menu if open
     if (isMobileMenuOpen) {
       setIsMobileMenuOpen(false);
     }
+    // Navigate to donate page
     navigate("/donate");
-  };
-
-  // Handle navigation with type checking
-  const handleNavClick = (item, e) => {
-    if (isMobileMenuOpen) {
-      setIsMobileMenuOpen(false);
-    }
-    
-    // If it's a route (not hash link)
-    if (item.type === "route") {
-      e.preventDefault();
-      navigate(item.href);
-    }
   };
 
   return (
@@ -84,45 +72,22 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8 exo">
-            {navItems.map((item) => {
-              // If it's a route (Gallery)
-              if (item.type === "route") {
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`font-semibold exo text-md transition duration-300 relative group flex items-center ${
-                      isScrolled ? 'text-gray-800' : 'text-white'
-                    } hover:text-[#50C779]`}
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    {item.name}
-                    <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 ${
-                      isScrolled ? 'bg-[#50C779]' : 'bg-[#50C779]'
-                    } group-hover:w-full`}></span>
-                  </Link>
-                );
-              }
-              
-              // If it's a hash link
-              return (
-                <HashLink
-                  key={item.name}
-                  to={item.href}
-                  smooth
-                  scroll={(el) => scrollWithOffset(el)}
-                  className={`font-semibold exo text-md transition duration-300 relative group ${
-                    isScrolled ? 'text-gray-800' : 'text-white'
-                  } hover:text-[#50C779]`}
-                >
-                  {item.name}
-                  <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 ${
-                    isScrolled ? 'bg-[#50C779]' : 'bg-white'
-                  } group-hover:w-full`}></span>
-                </HashLink>
-              );
-            })}
-            
+            {navItems.map((item) => (
+              <HashLink
+                key={item.name}
+                to={item.href}
+                smooth
+                scroll={(el) => scrollWithOffset(el)}
+                className={`font-semibold exo text-md transition duration-300 relative group ${
+                  isScrolled ? 'text-gray-800' : 'text-white'
+                }`}
+              >
+                {item.name}
+                <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 ${
+                  isScrolled ? 'bg-[#50C779]' : 'bg-white'
+                } group-hover:w-full`}></span>
+              </HashLink>
+            ))}
             <button
               onClick={handleDonateClick}
               className="bg-[#50C779] hover:bg-[#3EAE66] text-white px-6 py-2 rounded-2xl font-semibold exo text-lg hover:scale-105 transition duration-300 shadow-lg"
@@ -153,37 +118,18 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="lg:hidden mt-4 bg-white rounded-xl p-4 shadow-xl animate-fadeIn">
-            {navItems.map((item) => {
-              // If it's a route (Gallery)
-              if (item.type === "route") {
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className="flex items-center py-3 px-4 text-gray-700 hover:text-[#50C779] hover:bg-gray-50 rounded-lg transition duration-300"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    {item.name}
-                  </Link>
-                );
-              }
-              
-              // If it's a hash link
-              return (
-                <HashLink
-                  key={item.name}
-                  to={item.href}
-                  smooth
-                  scroll={(el) => scrollWithOffset(el)}
-                  className="block py-3 px-4 text-gray-700 hover:text-[#50C779] hover:bg-gray-50 rounded-lg transition duration-300"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </HashLink>
-              );
-            })}
-            
+            {navItems.map((item) => (
+              <HashLink
+                key={item.name}
+                to={item.href}
+                smooth
+                scroll={(el) => scrollWithOffset(el)}
+                className="block py-3 px-4 text-gray-700 hover:text-[#50C779] hover:bg-gray-50 rounded-lg transition duration-300"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {item.name}
+              </HashLink>
+            ))}
             <button
               onClick={handleDonateClick}
               className="w-full mt-3 bg-[#50C779] text-white px-6 py-3 rounded-xl font-semibold text-lg hover:bg-[#3EAE66] transition duration-300 block text-center"
