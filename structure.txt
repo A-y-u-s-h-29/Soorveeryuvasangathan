@@ -1,0 +1,48 @@
+backend/
+├── config/
+│   └── cloudinary.js
+├── controllers/
+│   └── volunteerController.js
+├── middleware/
+│   └── upload.js
+├── models/
+│   └── Volunteer.js
+├── node_modules/
+├── routes/
+│   └── volunteers.js
+├── uploads/
+├── .env
+├── package-lock.json
+├── package.json
+└── server.js
+
+
+op/
+├── dist/
+├── node_modules/
+├── public/
+├── src/
+│   ├── assets/
+│   ├── components/
+│   │   ├── AboutSection.jsx
+│   │   ├── DonationPage.jsx
+│   │   ├── Home.jsx
+│   │   ├── ImageSlider.jsx
+│   │   ├── ModernFooter.jsx
+│   │   ├── Navbar.jsx
+│   │   ├── VideoPage.jsx
+│   │   ├── VolunteerCard.jsx
+│   │   ├── VolunteerForm.jsx
+│   │   ├── VolunteerGallery.jsx
+│   │   └── VolunteerPage.jsx
+│   ├── services/
+│   │   └── api.jsx
+│   ├── App.css
+│   ├── App.jsx
+│   ├── index.css
+│   └── main.jsx
+├── .gitignore
+├── eslint.config.js
+├── index.html
+├── package-lock.json
+└── package.json
