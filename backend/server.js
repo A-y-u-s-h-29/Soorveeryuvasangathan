@@ -14,7 +14,7 @@ const corsOptions = {
   origin: [
    
     'http://localhost:5173',
-    'https://ngo-drab-five.vercel.app',
+    'https://visionary-babka-a05841.netlify.app',
   
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

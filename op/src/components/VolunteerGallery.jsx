@@ -12,37 +12,72 @@ const VolunteerGallery = () => {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAakNo, setSelectedAakNo] = useState('');
+  const [backendStatus, setBackendStatus] = useState('checking'); // 'checking', 'online', 'offline'
 
-  // Fetch all volunteers
+  // ✅ Improved fetch with Render cold start handling
   const fetchVolunteers = async () => {
     try {
       setLoading(true);
-      // Try backend API first
+      setBackendStatus('checking');
+      
+      // First try backend API with retry
       try {
         const response = await volunteerAPI.getAllVolunteers();
+        
         if (response.success) {
           setVolunteers(response.data || []);
           setFilteredVolunteers(response.data || []);
+          setBackendStatus('online');
+          console.log('✅ Connected to backend successfully');
           return;
         }
       } catch (apiError) {
-        console.log('Backend API failed, using mock data');
+        console.log('Backend API failed:', apiError.message);
+        
+        // If it's a timeout error, try one more time (Render cold start)
+        if (apiError.message?.includes('timeout') || apiError.message?.includes('starting')) {
+          console.log('⚠️ Render cold start detected, waiting 10 seconds...');
+          toast.loading('Backend is starting up. Please wait...');
+          
+          await new Promise(resolve => setTimeout(resolve, 10000));
+          
+          try {
+            const retryResponse = await volunteerAPI.getAllVolunteers();
+            if (retryResponse.success) {
+              setVolunteers(retryResponse.data || []);
+              setFilteredVolunteers(retryResponse.data || []);
+              setBackendStatus('online');
+              toast.dismiss();
+              toast.success('Connected to backend!');
+              console.log('✅ Connected on retry');
+              return;
+            }
+          } catch (retryError) {
+            console.log('Retry also failed:', retryError.message);
+          }
+        }
       }
-
-      // If backend fails, use local storage data or mock data
+      
+      // If backend fails, use fallback
+      setBackendStatus('offline');
+      console.log('🔄 Using fallback data');
+      
+      // Fallback to local storage data or mock data
       const savedVolunteers = JSON.parse(localStorage.getItem('volunteers')) || [];
       if (savedVolunteers.length > 0) {
         setVolunteers(savedVolunteers);
         setFilteredVolunteers(savedVolunteers);
+        toast('Using locally saved data', { icon: '💾' });
       } else {
-        // Generate mock data for demo
         const mockVolunteers = generateMockVolunteers();
         setVolunteers(mockVolunteers);
         setFilteredVolunteers(mockVolunteers);
+        toast('Using demo data', { icon: '🔄' });
       }
     } catch (error) {
       console.error('Error fetching volunteers:', error);
-      toast.error('Failed to load volunteers');
+      setBackendStatus('offline');
+      toast.error('Backend unavailable. Using offline data.');
     } finally {
       setLoading(false);
     }
@@ -105,15 +140,27 @@ const VolunteerGallery = () => {
     setSelectedVolunteer(volunteer);
   };
 
-  // Download all ID cards as ZIP (simplified - individual download for now)
+  // Download all ID cards as ZIP
   const handleDownloadAll = async () => {
     toast.loading('Preparing downloads... This may take a moment');
     
-    // For now, show message about individual downloads
     setTimeout(() => {
       toast.dismiss();
       toast.success('Please download each card individually for best quality');
     }, 1500);
+  };
+
+  // Refresh data from backend
+  const handleRefresh = async () => {
+    toast.loading('Refreshing data...');
+    await fetchVolunteers();
+    toast.dismiss();
+    
+    if (backendStatus === 'online') {
+      toast.success('Data refreshed from backend!');
+    } else {
+      toast('Using offline data', { icon: '📱' });
+    }
   };
 
   if (loading) {
@@ -122,7 +169,9 @@ const VolunteerGallery = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto mb-6"></div>
           <p className="text-gray-700 text-lg font-medium">Loading volunteers...</p>
-          <p className="text-gray-500 text-sm mt-2">Please wait while we fetch the data</p>
+          <p className="text-gray-500 text-sm mt-2">
+            Backend URL: https://soorveeryuvasangathan.onrender.com/api
+          </p>
         </div>
       </div>
     );
@@ -143,8 +192,25 @@ const VolunteerGallery = () => {
                 <p className="text-blue-100 opacity-90 text-lg">
                   View and manage all volunteer ID cards
                 </p>
+                <div className="flex items-center gap-2 mt-3">
+                  <div className={`w-2 h-2 rounded-full ${backendStatus === 'online' ? 'bg-green-400' : backendStatus === 'offline' ? 'bg-yellow-400' : 'bg-gray-400'}`}></div>
+                  <span className="text-sm">
+                    {backendStatus === 'online' ? 'Connected to backend' : 
+                     backendStatus === 'offline' ? 'Using offline data' : 
+                     'Checking connection...'}
+                  </span>
+                </div>
               </div>
-              <div className="mt-4 md:mt-0">
+              <div className="mt-4 md:mt-0 flex items-center gap-4">
+                <button
+                  onClick={handleRefresh}
+                  className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg font-medium hover:bg-white/30 transition flex items-center"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button>
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 inline-block">
                   <div className="text-4xl font-bold">{volunteers.length}</div>
                   <div className="text-blue-100 text-sm">Total Volunteers</div>
@@ -234,19 +300,47 @@ const VolunteerGallery = () => {
                   </span>
                 )}
               </div>
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedAakNo('');
-                }}
-                className="text-sm text-gray-600 hover:text-blue-600 transition"
-              >
-                Clear filters
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedAakNo('');
+                  }}
+                  className="text-sm text-gray-600 hover:text-blue-600 transition"
+                >
+                  Clear filters
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Backend Status Alert */}
+      {backendStatus === 'offline' && (
+        <div className="max-w-7xl mx-auto mb-4">
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  Backend is offline. Using locally saved data. 
+                  <button 
+                    onClick={handleRefresh}
+                    className="ml-1 font-medium text-yellow-700 hover:text-yellow-600 underline"
+                  >
+                    Click here to retry connection
+                  </button>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Volunteers Display */}
       {filteredVolunteers.length === 0 ? (
@@ -520,10 +614,12 @@ const VolunteerGallery = () => {
             शूरवीर युवा ट्रस्ट Volunteer Management System
           </h3>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Empowering volunteers with digital identity solutions. Total Volunteers Registered: <span className="font-bold text-blue-600">{volunteers.length}</span>
+            Backend: {backendStatus === 'online' ? '✅ Connected' : '⚠️ Using offline data'} | 
+            Total Volunteers: <span className="font-bold text-blue-600">{volunteers.length}</span>
           </p>
           <div className="mt-4 text-sm text-gray-500">
-            <p>Use search and filters to quickly find specific volunteers</p>
+            <p>API URL: https://soorveeryuvasangathan.onrender.com/api</p>
+            <p className="mt-1">Use search and filters to quickly find specific volunteers</p>
           </div>
         </div>
       </div>
