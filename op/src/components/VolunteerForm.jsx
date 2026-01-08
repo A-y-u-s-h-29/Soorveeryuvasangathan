@@ -1,9 +1,8 @@
-// components/VolunteerForm.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { volunteerAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { User, Phone, Home, IdCard, Camera, X, Upload, Loader } from 'lucide-react';
+import { User, Phone, Home, IdCard, Camera, X, Upload, Loader, MapPin } from 'lucide-react';
 
 const VolunteerForm = ({ onSubmit, onCancel }) => {
     const navigate = useNavigate();
@@ -12,6 +11,7 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
         aakNo: '',
         mobileNo: '',
         address: '',
+        area: '', // NEW FIELD
         image: null,
         imagePreview: null
     });
@@ -101,6 +101,13 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
             newErrors.address = 'Address is too short';
         }
         
+        // NEW: Area validation
+        if (!formData.area.trim()) {
+            newErrors.area = 'Area/Region is required';
+        } else if (formData.area.length < 2) {
+            newErrors.area = 'Area must be at least 2 characters';
+        }
+        
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -122,6 +129,7 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
             formDataToSend.append('aakNo', formData.aakNo.trim());
             formDataToSend.append('mobileNo', formData.mobileNo.trim());
             formDataToSend.append('address', formData.address.trim());
+            formDataToSend.append('area', formData.area.trim()); // NEW
             
             if (formData.image) {
                 formDataToSend.append('image', formData.image);
@@ -134,7 +142,6 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
                 if (response.success) {
                     toast.success('Volunteer registered successfully!');
                     if (onSubmit) {
-                        // Include imageUrl in the data
                         onSubmit({
                             ...response.data,
                             imageUrl: response.data.imageUrl || formData.imagePreview
@@ -144,27 +151,10 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
                     return;
                 }
             } catch (backendError) {
-                console.log('Backend not available, using mock data');
+                console.log('Backend error:', backendError);
+                toast.error(backendError.message || 'Registration failed');
+                return;
             }
-
-            // If backend fails, use mock data with image preview
-            const mockVolunteerData = {
-                _id: Date.now().toString(),
-                uniqueId: Math.floor(Math.random() * 1000) + 1,
-                name: formData.name.trim(),
-                aakNo: formData.aakNo.trim(),
-                mobileNo: formData.mobileNo.trim(),
-                address: formData.address.trim(),
-                imageUrl: formData.imagePreview || '', // Use the image preview
-                joinDate: new Date().toISOString(),
-                createdAt: new Date()
-            };
-
-            toast.success('Volunteer registered successfully! (Demo Mode)');
-            if (onSubmit) {
-                onSubmit(mockVolunteerData);
-            }
-            resetForm();
             
         } catch (error) {
             console.error('Error:', error);
@@ -180,6 +170,7 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
             aakNo: '',
             mobileNo: '',
             address: '',
+            area: '', // NEW
             image: null,
             imagePreview: null
         });
@@ -281,6 +272,32 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
                                     <p className="text-red-500 text-sm mt-1">{errors.mobileNo}</p>
                                 )}
                             </div>
+
+                            {/* NEW: Area Field */}
+                            <div>
+                                <label className="flex items-center text-gray-700 font-medium mb-2">
+                                    <MapPin className="w-5 h-5 mr-2 text-red-600" />
+                                    Area/Region *
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        name="area"
+                                        value={formData.area}
+                                        onChange={handleChange}
+                                        placeholder="Enter your area/region (e.g., North Delhi, South Mumbai)"
+                                        className={`w-full px-4 py-3 pl-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent ${errors.area ? 'border-red-500' : 'border-gray-300'}`}
+                                        disabled={loading}
+                                    />
+                                    <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                                </div>
+                                {errors.area && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.area}</p>
+                                )}
+                                <p className="text-gray-500 text-xs mt-1">
+                                    Enter the area you will serve (city, district, ward, etc.)
+                                </p>
+                            </div>
                         </div>
 
                         {/* Right Column - Address & Photo */}
@@ -289,15 +306,15 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
                             <div>
                                 <label className="flex items-center text-gray-700 font-medium mb-2">
                                     <Home className="w-5 h-5 mr-2 text-orange-600" />
-                                    Address *
+                                    Complete Address *
                                 </label>
                                 <div className="relative">
                                     <textarea
                                         name="address"
                                         value={formData.address}
                                         onChange={handleChange}
-                                        placeholder="Enter your complete address"
-                                        rows="3"
+                                        placeholder="Enter your complete address with pincode"
+                                        rows="4"
                                         className={`w-full px-4 py-3 pl-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${errors.address ? 'border-red-500' : 'border-gray-300'}`}
                                         disabled={loading}
                                     />
@@ -412,6 +429,7 @@ const VolunteerForm = ({ onSubmit, onCancel }) => {
                             <span>
                                 * After registration, your ID card will be automatically generated and displayed 
                                 on this page. You can download, print, or share it immediately.
+                                Your area information will help in assigning appropriate roles.
                             </span>
                         </p>
                     </div>

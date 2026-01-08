@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { volunteerAPI } from '../services/api';
-import { Search, Filter, Download, User, Grid, List, Eye, Calendar, Phone, MapPin, Award } from 'lucide-react';
+import { 
+  Search, Filter, Download, User, Grid, List, Eye, 
+  Calendar, Phone, MapPin, Award, Crown, Shield, Users, Home 
+} from 'lucide-react'; // ADDED Home here
 import { toast } from 'react-hot-toast';
 import MiniVolunteerCard from './VolunteerCard';
 
@@ -12,9 +15,12 @@ const VolunteerGallery = () => {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAakNo, setSelectedAakNo] = useState('');
-  const [backendStatus, setBackendStatus] = useState('checking'); // 'checking', 'online', 'offline'
+  const [selectedArea, setSelectedArea] = useState(''); // NEW: Area filter
+  const [selectedRole, setSelectedRole] = useState(''); // NEW: Role filter
+  const [backendStatus, setBackendStatus] = useState('checking');
+  const [areaStats, setAreaStats] = useState([]);
 
-  // ✅ Improved fetch with Render cold start handling
+  // ✅ Improved fetch with area statistics
   const fetchVolunteers = async () => {
     try {
       setLoading(true);
@@ -29,6 +35,17 @@ const VolunteerGallery = () => {
           setFilteredVolunteers(response.data || []);
           setBackendStatus('online');
           console.log('✅ Connected to backend successfully');
+          
+          // Fetch area statistics
+          try {
+            const statsResponse = await volunteerAPI.getAreaStatistics();
+            if (statsResponse.success) {
+              setAreaStats(statsResponse.data || []);
+            }
+          } catch (statsError) {
+            console.log('Area stats failed:', statsError.message);
+          }
+          
           return;
         }
       } catch (apiError) {
@@ -84,34 +101,37 @@ const VolunteerGallery = () => {
   };
 
   const generateMockVolunteers = () => {
-    const names = [
-      'Rajesh Kumar', 'Priya Sharma', 'Amit Patel', 'Sneha Singh',
-      'Vikram Yadav', 'Anjali Gupta', 'Rahul Verma', 'Pooja Mehta'
-    ];
-    const addresses = [
-      'Mumbai, Maharashtra', 'Delhi, NCR', 'Bangalore, Karnataka',
-      'Chennai, Tamil Nadu', 'Kolkata, West Bengal', 'Hyderabad, Telangana'
-    ];
+  const names = [
+    'Rajesh Kumar', 'Priya Sharma', 'Amit Patel', 'Sneha Singh',
+    'Vikram Yadav', 'Anjali Gupta', 'Rahul Verma', 'Pooja Mehta'
+  ];
+  const addresses = [
+    'Mumbai, Maharashtra', 'Delhi, NCR', 'Bangalore, Karnataka',
+    'Chennai, Tamil Nadu', 'Kolkata, West Bengal', 'Hyderabad, Telangana'
+  ];
+  const areas = ['North Delhi', 'South Mumbai', 'Central Bangalore', 'East Chennai', 'West Kolkata', 'North Hyderabad'];
 
-    return Array.from({ length: 8 }, (_, i) => ({
-      _id: `mock_${i + 1}`,
-      uniqueId: 1000 + i + 1,
-      name: names[i],
-      aakNo: `AAK${String(1000 + i + 1).padStart(4, '0')}`,
-      mobileNo: `9876543${i.toString().padStart(3, '0')}`,
-      address: addresses[i % addresses.length],
-      imageUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(names[i])}&background=4f46e5&color=fff&size=200&bold=true&format=png`,
-      joinDate: new Date(Date.now() - i * 86400000).toISOString(),
-      createdAt: new Date(Date.now() - i * 86400000)
-    }));
-  };
+  return Array.from({ length: 8 }, (_, i) => ({
+    _id: `mock_${i + 1}_${Date.now()}_${Math.random()}`, // ADDED timestamp for uniqueness
+    uniqueId: 1000 + i + 1,
+    name: names[i],
+    aakNo: `AAK${String(1000 + i + 1).padStart(4, '0')}`,
+    mobileNo: `9876543${i.toString().padStart(3, '0')}`,
+    address: addresses[i % addresses.length],
+    area: areas[i % areas.length],
+    role: i === 0 ? 'president' : i === 1 ? 'vice-president' : 'member',
+    imageUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(names[i])}&background=4f46e5&color=fff&size=200&bold=true&format=png`,
+    joinDate: new Date(Date.now() - i * 86400000).toISOString(),
+    createdAt: new Date(Date.now() - i * 86400000)
+  }));
+};
 
   // Initial fetch
   useEffect(() => {
     fetchVolunteers();
   }, []);
 
-  // Filter volunteers based on search
+  // Filter volunteers based on search, area, and role
   useEffect(() => {
     let results = [...volunteers];
     
@@ -121,7 +141,8 @@ const VolunteerGallery = () => {
         v.name.toLowerCase().includes(term) ||
         v.aakNo.toLowerCase().includes(term) ||
         v.mobileNo.includes(term) ||
-        v.address.toLowerCase().includes(term)
+        v.address.toLowerCase().includes(term) ||
+        (v.area && v.area.toLowerCase().includes(term))
       );
     }
     
@@ -129,25 +150,63 @@ const VolunteerGallery = () => {
       results = results.filter(v => v.aakNo === selectedAakNo);
     }
     
+    if (selectedArea) {
+      results = results.filter(v => v.area === selectedArea);
+    }
+    
+    if (selectedRole) {
+      results = results.filter(v => v.role === selectedRole);
+    }
+    
     setFilteredVolunteers(results);
-  }, [searchTerm, selectedAakNo, volunteers]);
+  }, [searchTerm, selectedAakNo, selectedArea, selectedRole, volunteers]);
 
-  // Get unique AAK numbers for filter
+  // Get unique values for filters
   const aakNumbers = [...new Set(volunteers.map(v => v.aakNo))].sort();
+  const areas = [...new Set(volunteers.map(v => v.area).filter(Boolean))].sort();
+  const roles = [...new Set(volunteers.map(v => v.role).filter(Boolean))].sort();
 
   // View volunteer details
   const handleViewVolunteer = (volunteer) => {
     setSelectedVolunteer(volunteer);
   };
 
-  // Download all ID cards as ZIP
-  const handleDownloadAll = async () => {
-    toast.loading('Preparing downloads... This may take a moment');
-    
-    setTimeout(() => {
-      toast.dismiss();
-      toast.success('Please download each card individually for best quality');
-    }, 1500);
+  // Get role badge component
+  const RoleBadge = ({ role, area }) => {
+    const getRoleColor = (role) => {
+      switch(role) {
+        case 'president': return 'bg-red-100 text-red-700 border-red-200';
+        case 'vice-president': return 'bg-blue-100 text-blue-700 border-blue-200';
+        default: return 'bg-green-100 text-green-700 border-green-200';
+      }
+    };
+
+    const getRoleIcon = (role) => {
+      switch(role) {
+        case 'president': return <Crown className="w-3 h-3" />;
+        case 'vice-president': return <Shield className="w-3 h-3" />;
+        default: return <Users className="w-3 h-3" />;
+      }
+    };
+
+    const formatRole = (role) => {
+      switch(role) {
+        case 'president': return 'President';
+        case 'vice-president': return 'Vice President';
+        case 'member': return 'Member';
+        default: return 'Member';
+      }
+    };
+
+    return (
+      <div className={`inline-flex items-center px-3 py-1 rounded-full border ${getRoleColor(role)} text-sm font-semibold`}>
+        {getRoleIcon(role)}
+        <span className="ml-1">{formatRole(role)}</span>
+        {area && (
+          <span className="ml-2 text-xs opacity-75">• {area}</span>
+        )}
+      </div>
+    );
   };
 
   // Refresh data from backend
@@ -161,6 +220,16 @@ const VolunteerGallery = () => {
     } else {
       toast('Using offline data', { icon: '📱' });
     }
+  };
+
+  // Download all ID cards as ZIP
+  const handleDownloadAll = async () => {
+    toast.loading('Preparing downloads... This may take a moment');
+    
+    setTimeout(() => {
+      toast.dismiss();
+      toast.success('Please download each card individually for best quality');
+    }, 1500);
   };
 
   if (loading) {
@@ -190,7 +259,7 @@ const VolunteerGallery = () => {
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-2">Volunteer ID Card Gallery</h1>
                 <p className="text-blue-100 opacity-90 text-lg">
-                  View and manage all volunteer ID cards
+                  View and manage all volunteer ID cards with area-wise distribution
                 </p>
                 <div className="flex items-center gap-2 mt-3">
                   <div className={`w-2 h-2 rounded-full ${backendStatus === 'online' ? 'bg-green-400' : backendStatus === 'offline' ? 'bg-yellow-400' : 'bg-gray-400'}`}></div>
@@ -217,6 +286,26 @@ const VolunteerGallery = () => {
                 </div>
               </div>
             </div>
+
+            {/* Area Statistics */}
+            {areaStats.length > 0 && (
+              <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3">
+                {areaStats.slice(0, 5).map((stat, index) => (
+                  <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <div className="text-xs text-blue-100 truncate">{stat._id || 'Unknown'}</div>
+                    <div className="text-xl font-bold">{stat.total}</div>
+                    <div className="flex gap-1 mt-1">
+                      {stat.presidents > 0 && (
+                        <span className="text-xs bg-red-500/30 text-white px-1 rounded">P: {stat.presidents}</span>
+                      )}
+                      {stat.vicePresidents > 0 && (
+                        <span className="text-xs bg-blue-500/30 text-white px-1 rounded">VP: {stat.vicePresidents}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -224,7 +313,7 @@ const VolunteerGallery = () => {
       {/* Search and Filter Section */}
       <div className="max-w-7xl mx-auto mb-8">
         <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search Input */}
             <div className="relative">
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -232,7 +321,7 @@ const VolunteerGallery = () => {
               </div>
               <input
                 type="text"
-                placeholder="Search by name, AAK no, mobile, or address..."
+                placeholder="Search by name, AAK, mobile, area..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
@@ -256,8 +345,44 @@ const VolunteerGallery = () => {
               </select>
             </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center justify-between md:justify-end space-x-4">
+            {/* Area Filter */}
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <select
+                value={selectedArea}
+                onChange={(e) => setSelectedArea(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none appearance-none bg-white transition"
+              >
+                <option value="">All Areas</option>
+                {areas.map((area) => (
+                  <option key={area} value={area}>{area}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Role Filter */}
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Award className="w-5 h-5" />
+              </div>
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none appearance-none bg-white transition"
+              >
+                <option value="">All Roles</option>
+                <option value="member">Members</option>
+                <option value="president">Presidents</option>
+                <option value="vice-president">Vice Presidents</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Second Row: View Mode and Actions */}
+          <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
               <div className="flex bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('grid')}
@@ -272,6 +397,44 @@ const VolunteerGallery = () => {
                   <List className="w-5 h-5" />
                 </button>
               </div>
+              
+              {/* Quick Filters */}
+              <div className="flex gap-2">
+                {selectedArea && (
+                  <button
+                    onClick={() => setSelectedArea('')}
+                    className="text-sm bg-green-50 text-green-700 px-3 py-1 rounded-full flex items-center"
+                  >
+                    <MapPin className="w-3 h-3 mr-1" />
+                    {selectedArea}
+                    <span className="ml-2 text-gray-500">×</span>
+                  </button>
+                )}
+                {selectedRole && (
+                  <button
+                    onClick={() => setSelectedRole('')}
+                    className="text-sm bg-purple-50 text-purple-700 px-3 py-1 rounded-full flex items-center"
+                  >
+                    <Award className="w-3 h-3 mr-1" />
+                    {selectedRole === 'president' ? 'Presidents' : selectedRole === 'vice-president' ? 'Vice Presidents' : 'Members'}
+                    <span className="ml-2 text-gray-500">×</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedAakNo('');
+                  setSelectedArea('');
+                  setSelectedRole('');
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
+              >
+                Clear All Filters
+              </button>
               <button
                 onClick={handleDownloadAll}
                 className="px-4 py-2 bg-gradient-to-r from-blue-500 to-green-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-green-600 transition flex items-center shadow-md hover:shadow-lg"
@@ -284,8 +447,8 @@ const VolunteerGallery = () => {
 
           {/* Results Count */}
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3">
                 <span className="text-gray-700 font-medium">
                   Showing <span className="text-blue-600 font-bold">{filteredVolunteers.length}</span> of <span className="text-gray-800">{volunteers.length}</span> volunteers
                 </span>
@@ -294,22 +457,33 @@ const VolunteerGallery = () => {
                     Search: "{searchTerm}"
                   </span>
                 )}
-                {selectedAakNo && (
-                  <span className="text-sm bg-green-50 text-green-700 px-3 py-1 rounded-full">
-                    AAK: {selectedAakNo}
+                {selectedArea && (
+                  <span className="text-sm bg-green-50 text-green-700 px-3 py-1 rounded-full flex items-center">
+                    <MapPin className="w-3 h-3 mr-1" />
+                    Area: {selectedArea}
+                  </span>
+                )}
+                {selectedRole && (
+                  <span className="text-sm bg-purple-50 text-purple-700 px-3 py-1 rounded-full flex items-center">
+                    <Award className="w-3 h-3 mr-1" />
+                    Role: {selectedRole === 'president' ? 'President' : selectedRole === 'vice-president' ? 'Vice President' : 'Member'}
                   </span>
                 )}
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedAakNo('');
-                  }}
-                  className="text-sm text-gray-600 hover:text-blue-600 transition"
-                >
-                  Clear filters
-                </button>
+              
+              {/* Role Summary */}
+              <div className="flex gap-2 text-sm">
+                <span className="text-gray-600">
+                  {volunteers.filter(v => v.role === 'president').length} President(s)
+                </span>
+                <span className="text-gray-600">•</span>
+                <span className="text-gray-600">
+                  {volunteers.filter(v => v.role === 'vice-president').length} Vice President(s)
+                </span>
+                <span className="text-gray-600">•</span>
+                <span className="text-gray-600">
+                  {volunteers.filter(v => v.role === 'member').length} Member(s)
+                </span>
               </div>
             </div>
           </div>
@@ -351,7 +525,7 @@ const VolunteerGallery = () => {
             </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-3">No volunteers found</h3>
             <p className="text-gray-600 max-w-md mx-auto mb-8">
-              {searchTerm || selectedAakNo 
+              {searchTerm || selectedArea || selectedRole || selectedAakNo 
                 ? 'Try adjusting your search or filter criteria'
                 : 'No volunteers registered yet. Register a new volunteer to get started.'}
             </p>
@@ -360,6 +534,8 @@ const VolunteerGallery = () => {
                 onClick={() => {
                   setSearchTerm('');
                   setSelectedAakNo('');
+                  setSelectedArea('');
+                  setSelectedRole('');
                 }}
                 className="px-6 py-3 bg-gradient-to-r from-blue-500 to-green-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-green-600 transition shadow-md"
               >
@@ -400,8 +576,20 @@ const VolunteerGallery = () => {
                             <Award className="w-4 h-4 text-blue-600" />
                             <span className="font-semibold text-blue-700">{volunteer.aakNo}</span>
                           </div>
+                          {volunteer.area && (
+                            <div className="flex items-center gap-1 mt-1 text-sm text-gray-600">
+                              <MapPin className="w-3 h-3" />
+                              {volunteer.area}
+                            </div>
+                          )}
                         </div>
                       </div>
+                      {/* Role Badge */}
+                      {volunteer.role && (
+                        <div className="mt-3">
+                          <RoleBadge role={volunteer.role} area={volunteer.area} />
+                        </div>
+                      )}
                     </div>
                     
                     {/* Volunteer Details */}
@@ -419,7 +607,7 @@ const VolunteerGallery = () => {
                         
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
-                            <MapPin className="w-4 h-4 text-green-600" />
+                            <Home className="w-4 h-4 text-green-600" />
                           </div>
                           <div>
                             <div className="text-xs text-gray-500">Address</div>
@@ -492,9 +680,9 @@ const VolunteerGallery = () => {
                   <thead>
                     <tr className="bg-gradient-to-r from-blue-600 to-green-600 text-white">
                       <th className="py-4 px-6 text-left font-semibold text-sm uppercase tracking-wider">Volunteer</th>
+                      <th className="py-4 px-6 text-left font-semibold text-sm uppercase tracking-wider">Area & Role</th>
                       <th className="py-4 px-6 text-left font-semibold text-sm uppercase tracking-wider">AAK No</th>
                       <th className="py-4 px-6 text-left font-semibold text-sm uppercase tracking-wider">Contact</th>
-                      <th className="py-4 px-6 text-left font-semibold text-sm uppercase tracking-wider">Location</th>
                       <th className="py-4 px-6 text-left font-semibold text-sm uppercase tracking-wider">Join Date</th>
                       <th className="py-4 px-6 text-left font-semibold text-sm uppercase tracking-wider">Actions</th>
                     </tr>
@@ -518,26 +706,30 @@ const VolunteerGallery = () => {
                             </div>
                             <div>
                               <div className="font-semibold text-gray-900">{volunteer.name}</div>
-                              <div className="text-sm text-gray-500">Volunteer ID: {volunteer.uniqueId}</div>
+                              <div className="text-sm text-gray-500">ID: {volunteer.uniqueId}</div>
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-6">
-                          <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold">
-                            <Award className="w-3 h-3 mr-1" />
-                            {volunteer.aakNo}
+                          <div className="space-y-2">
+                            {volunteer.area && (
+                              <div className="flex items-center text-gray-700">
+                                <MapPin className="w-3 h-3 mr-1 text-green-600" />
+                                <span className="text-sm font-medium">{volunteer.area}</span>
+                              </div>
+                            )}
+                            {volunteer.role && (
+                              <RoleBadge role={volunteer.role} />
+                            )}
                           </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="font-semibold text-blue-700">{volunteer.aakNo}</div>
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center text-gray-700">
                             <Phone className="w-4 h-4 mr-2 text-blue-600" />
                             +91 {volunteer.mobileNo}
-                          </div>
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="flex items-center text-gray-700 max-w-xs truncate">
-                            <MapPin className="w-4 h-4 mr-2 text-green-600" />
-                            {volunteer.address}
                           </div>
                         </td>
                         <td className="py-4 px-6">
@@ -576,6 +768,7 @@ const VolunteerGallery = () => {
                 </h2>
                 <p className="text-gray-600">
                   {selectedVolunteer.name} • {selectedVolunteer.aakNo}
+                  {selectedVolunteer.area && ` • ${selectedVolunteer.area}`}
                 </p>
               </div>
               <button
@@ -609,17 +802,19 @@ const VolunteerGallery = () => {
             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
             <div className="w-2 h-2 rounded-full bg-green-500"></div>
             <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+            <div className="w-2 h-2 rounded-full bg-red-500"></div>
           </div>
           <h3 className="text-lg font-bold text-gray-800 mb-2">
             शूरवीर युवा ट्रस्ट Volunteer Management System
           </h3>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Backend: {backendStatus === 'online' ? '✅ Connected' : '⚠️ Using offline data'} | 
-            Total Volunteers: <span className="font-bold text-blue-600">{volunteers.length}</span>
+            Total Volunteers: <span className="font-bold text-blue-600">{volunteers.length}</span> | 
+            Areas: <span className="font-bold text-green-600">{areas.length}</span>
           </p>
           <div className="mt-4 text-sm text-gray-500">
-            <p>API URL: https://soorveeryuvasangathan.onrender.com/api</p>
-            <p className="mt-1">Use search and filters to quickly find specific volunteers</p>
+            <p>Use filters to view volunteers by area and role</p>
+            <p className="mt-1">All volunteers can see each other's information for better coordination</p>
           </div>
         </div>
       </div>

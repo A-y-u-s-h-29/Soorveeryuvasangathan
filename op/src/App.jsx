@@ -12,6 +12,7 @@ import VolunteerCard from './components/VolunteerCard'; // Make sure this is you
 import ModernFooter from './components/ModernFooter';
 import DonationPage from './components/DonationPage';
 import VolunteerGallery from './components/VolunteerGallery';
+import AdminPanel from './components/AdminPanel';
 
 function App() {
   const [latestVolunteer, setLatestVolunteer] = useState(null);
@@ -74,6 +75,7 @@ function App() {
           } />
           <Route path="/donate" element={<DonationPage/>}/>
   <Route path="/gallery" element={<VolunteerGallery />} />
+  <Route path="/admin" element={<AdminPanel />} />
 
 
           {/* Volunteer Registration Page with Auto Card Display */}
